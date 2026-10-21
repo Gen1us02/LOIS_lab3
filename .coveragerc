@@ -1,0 +1,20 @@
+[run]
+branch = True
+source =
+    src
+omit =
+    tests/*
+    */__pycache__/*
+    src/main.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.:
+    raise NotImplementedError
+    if TYPE_CHECKING:
+    if sys.version_info
+    @abstractmethod
+show_missing = True
+skip_covered = True
