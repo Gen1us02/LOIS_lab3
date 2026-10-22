@@ -14,6 +14,7 @@
 """
 
 import os
+from collections import defaultdict
 
 from src import operations
 from src.formatter import format_table
@@ -21,10 +22,6 @@ from src.loader import load_from_file
 
 
 def run_inference(file_path):
-    """Выполняет прямой нечёткий вывод для примера из файла.
-
-    Возвращает список строк отчёта. Если файла нет — пустой список.
-    """
     solution = []
     if not os.path.isfile(file_path):
         return solution
@@ -41,7 +38,7 @@ def run_inference(file_path):
         solution.append(f"Ошибка загрузки данных: {e}\n")
         return solution
 
-    # Матрица отношения для каждого правила
+    # ---------- 1. Матрицы отношений ----------
     rule_relations = {}
     for rule_obj in rules.values():
         names = [t.strip().split("(")[0] for t in rule_obj.tail]
@@ -54,12 +51,26 @@ def run_inference(file_path):
             facts[first_name].tail, facts[second_name].tail
         )
 
-    # Прямой вывод: для каждого правила перебираем ВСЕ факты как A'
-    result_heads, result_sets = [], []
+    # ---------- 2. Сколько результатов на каждое следствие ----------
+    # Ключ — имя следствия (B, C, ...), значение — сколько раз оно встретится
+    counts = defaultdict(int)
+    for rule_name in rule_relations:
+        rule_obj = rules[rule_name]
+        names = [t.strip().split("(")[0] for t in rule_obj.tail]
+        consequent_name = names[1]
+        antecedent_keys = set(facts[names[0]].tail.keys())  # type: ignore
+        for _, fact in facts.items():
+            if set(fact.tail.keys()) & antecedent_keys:  # type: ignore
+                counts[consequent_name] += 1
+
+    # ---------- 3. Печать ----------
+    result_lines = []
+    indices = defaultdict(int)
 
     for rule_name, relation in rule_relations.items():
         rule_obj = rules[rule_name]
-        antecedent_name = rule_obj.tail[0].strip().split("(")[0]
+        names = [t.strip().split("(")[0] for t in rule_obj.tail]
+        antecedent_name, consequent_name = names[0], names[1]
         antecedent_keys = set(facts[antecedent_name].tail.keys())  # type: ignore
 
         solution.append(f"\n=== Правило: {rule_name} ===")
@@ -72,16 +83,23 @@ def run_inference(file_path):
             table = operations.built_impl_table(fact.tail, relation)
             compressed = operations.compress(table)
 
-            head_name = f"({rule_name})/~\\{fact.head}"
-            solution.append(format_table(head_name, table))
+            # Имя: B' если единственный результат; иначе B1', B2', ...
+            if counts[consequent_name] == 1:
+                name = f"{consequent_name}'"
+            else:
+                indices[consequent_name] += 1
+                name = f"{consequent_name}{indices[consequent_name]}'"
 
-            result_heads.append(head_name)
-            result_sets.append(
+            source = f"({rule_name})/~\\{fact.head}'"
+            solution.append(format_table(f"{source}", table))
+
+            tail_str = (
                 "{" + ", ".join(f"<{k}, {v}>" for k, v in compressed.items()) + "}"
             )
+            result_lines.append(f"{name} = {tail_str}")
 
     solution.append("\nРезультат:\n")
-    for i, (head, tail) in enumerate(zip(result_heads, result_sets), 1):
-        solution.append(f"I{i} = {head} = {tail}\n")
+    for line in result_lines:
+        solution.append(line + "\n")
 
     return solution
