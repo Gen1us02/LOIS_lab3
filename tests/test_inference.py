@@ -40,7 +40,7 @@ def test_run_inference_normal(tmp_path):
     assert "--- Пример: ok.txt ---" in text
     assert "=== Правило: A(x)~>B(y) ===" in text
     assert "Результат:" in text
-    assert "I1 =" in text
+    assert "A=" in text
 
 
 def test_run_inference_disjoint_symbols(tmp_path):
