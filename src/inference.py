@@ -11,6 +11,16 @@
     - строит отношения для каждого правила,
     - применяет композицию и сжатие,
     - возвращает список строк отчёта.
+Источники:
+Блюмин, С. Л. Нечёткая логика: алгебраические основы и приложения /
+С. Л. Блюмин, И. А. Шуйкова, П. В. Сараев, И. В. Черпаков. –
+Липецк : ЛЭГИ, 2002. – 111 с.
+
+Модуль collections — Container datatypes : [документация Python].
+– URL: https://docs.python.org/3/library/collections.html (дата обращения: 28.09.2026).
+
+os — Miscellaneous operating system interfaces : [документация Python].
+– URL: https://docs.python.org/3/library/os.html (дата обращения: 28.09.2026).
 """
 
 import os

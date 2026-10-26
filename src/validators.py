@@ -8,6 +8,10 @@
 
 
 Файл отвечает за валидацию правил и фактов.
+
+Источники:
+Regular expression operations // Python documentation : [сайт].
+– URL: https://docs.python.org/3/library/re.html (дата обращения: 26.09.2026).
 """
 
 import re
