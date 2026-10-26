@@ -48,7 +48,6 @@ def run_inference(file_path):
         solution.append(f"Ошибка загрузки данных: {e}\n")
         return solution
 
-    # ---------- 1. Матрицы отношений ----------
     rule_relations = {}
     for rule_obj in rules.values():
         names = [t.strip().split("(")[0] for t in rule_obj.tail]
@@ -61,8 +60,6 @@ def run_inference(file_path):
             facts[first_name].tail, facts[second_name].tail
         )
 
-    # ---------- 2. Сколько результатов на каждое следствие ----------
-    # Ключ — имя следствия (B, C, ...), значение — сколько раз оно встретится
     counts = defaultdict(int)
     for rule_name in rule_relations:
         rule_obj = rules[rule_name]
@@ -73,7 +70,6 @@ def run_inference(file_path):
             if set(fact.tail.keys()) & antecedent_keys:  # type: ignore
                 counts[consequent_name] += 1
 
-    # ---------- 3. Печать ----------
     result_lines = []
     indices = defaultdict(int)
 
@@ -93,7 +89,6 @@ def run_inference(file_path):
             table = operations.built_impl_table(fact.tail, relation)
             compressed = operations.compress(table)
 
-            # Имя: B' если единственный результат; иначе B1', B2', ...
             if counts[consequent_name] == 1:
                 name = f"{consequent_name}'"
             else:
