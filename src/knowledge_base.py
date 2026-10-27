@@ -57,7 +57,7 @@ class KnowledgeBase:
         n = self.counters.get(base, 0)
         while True:
             n += 1
-            cand = f"{base}_{n}'"
+            cand = f"{base}{n}'"
             if cand not in self.facts:
                 self.counters[base] = n
                 return cand
