@@ -16,95 +16,86 @@
 С. Л. Блюмин, И. А. Шуйкова, П. В. Сараев, И. В. Черпаков. –
 Липецк : ЛЭГИ, 2002. – 111 с.
 
-Модуль collections — Container datatypes : [документация Python].
-– URL: https://docs.python.org/3/library/collections.html (дата обращения: 28.09.2026).
-
 os — Miscellaneous operating system interfaces : [документация Python].
 – URL: https://docs.python.org/3/library/os.html (дата обращения: 28.09.2026).
 """
 
 import os
-from collections import defaultdict
-
 from src import operations
-from src.formatter import format_table
 from src.loader import load_from_file
+from src.knowledge_base import KnowledgeBase
 
 
-def run_inference(file_path):
-    solution = []
+def run_inference(file_path, max_iterations=100):
     if not os.path.isfile(file_path):
-        return solution
+        return None
 
-    solution.append(f"\n--- Пример: {os.path.basename(file_path)} ---\n")
-    solution.append("Входные данные:\n")
-    with open(file_path, "r", encoding="utf-8") as f:
-        solution.append(f.read())
-    solution.append("\n\nПрямой нечеткий вывод:\n")
+    facts, rules = load_from_file(file_path)
+    kb = KnowledgeBase({name: fact.tail for name, fact in facts.items()})
 
-    try:
-        facts, rules = load_from_file(file_path)
-    except Exception as e:
-        solution.append(f"Ошибка загрузки данных: {e}\n")
-        return solution
+    rules_parsed = []
+    relations = {}
+    skipped_rules = []
 
-    rule_relations = {}
     for rule_obj in rules.values():
         names = [t.strip().split("(")[0] for t in rule_obj.tail]
-        first_name, second_name = names[0], names[1]
-        if first_name not in facts or second_name not in facts:
-            missing = first_name if first_name not in facts else second_name
-            solution.append(f"Ошибка: факт '{missing}' не найден.\n")
-            return solution
-        rule_relations[rule_obj.rule] = operations.matrix_impl(
-            facts[first_name].tail, facts[second_name].tail
-        )
+        rule_str, ant, cons = rule_obj.rule, names[0], names[1]
 
-    counts = defaultdict(int)
-    for rule_name in rule_relations:
-        rule_obj = rules[rule_name]
-        names = [t.strip().split("(")[0] for t in rule_obj.tail]
-        consequent_name = names[1]
-        antecedent_keys = set(facts[names[0]].tail.keys())  # type: ignore
-        for _, fact in facts.items():
-            if set(fact.tail.keys()) & antecedent_keys:  # type: ignore
-                counts[consequent_name] += 1
+        if not facts[ant].tail:
+            skipped_rules.append((rule_str, "пустая посылка"))
+            continue
+        if not facts[cons].tail:
+            skipped_rules.append((rule_str, "пустое следствие"))
+            continue
 
-    result_lines = []
-    indices = defaultdict(int)
+        rules_parsed.append((rule_str, ant, cons))
+        relations[rule_str] = operations.matrix_impl(facts[ant].tail, facts[cons].tail)
 
-    for rule_name, relation in rule_relations.items():
-        rule_obj = rules[rule_name]
-        names = [t.strip().split("(")[0] for t in rule_obj.tail]
-        antecedent_name, consequent_name = names[0], names[1]
-        antecedent_keys = set(facts[antecedent_name].tail.keys())  # type: ignore
+    iterations_log = []
+    applied = set()
+    iteration = 0
 
-        solution.append(f"\n=== Правило: {rule_name} ===")
-        solution.append(format_table(f"R = I({antecedent_name})", relation))
+    while iteration < max_iterations:
+        iteration += 1
+        snapshot = list(kb.items())
+        derivations = []
+        new_facts = []
+        matched_facts = []
 
-        for _, fact in facts.items():
-            if not (set(fact.tail.keys()) & antecedent_keys):  # type: ignore
-                continue
+        for rule_str, ant, cons in rules_parsed:
+            relation = relations[rule_str]
+            ant_keys = set(kb[ant].keys())
 
-            table = operations.built_impl_table(fact.tail, relation)
-            compressed = operations.compress(table)
+            for src_name, src_tail in snapshot:
+                if (rule_str, src_name) in applied:
+                    continue
+                applied.add((rule_str, src_name))
 
-            if counts[consequent_name] == 1:
-                name = f"{consequent_name}'"
-            else:
-                indices[consequent_name] += 1
-                name = f"{consequent_name}{indices[consequent_name]}'"
+                if not (set(src_tail.keys()) & ant_keys):
+                    continue
 
-            source = f"({rule_name})/~\\{fact.head}'"
-            solution.append(format_table(f"{source}", table))
+                table = operations.built_impl_table(src_tail, relation)
+                compressed = operations.compress(table)
+                if not compressed:
+                    continue
 
-            tail_str = (
-                "{" + ", ".join(f"<{k}, {v}>" for k, v in compressed.items()) + "}"
-            )
-            result_lines.append(f"{name} = {tail_str}")
+                name, status = kb.add(cons, compressed)
+                derivations.append(
+                    (rule_str, src_name, table, compressed, name, status)
+                )
+                if status == "new":
+                    new_facts.append(name)
+                else:
+                    matched_facts.append((name, status))
 
-    solution.append("\nРезультат:\n")
-    for line in result_lines:
-        solution.append(line + "\n")
+        iterations_log.append((iteration, derivations, new_facts, matched_facts))
+        if not new_facts:
+            break
 
-    return solution
+    return {
+        "rules_parsed": rules_parsed,
+        "relations": relations,
+        "skipped_rules": skipped_rules,
+        "iterations_log": iterations_log,
+        "kb": kb,
+    }

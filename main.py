@@ -16,31 +16,20 @@
 Блюмин, С. Л. Нечёткая логика: алгебраические основы и приложения /
 С. Л. Блюмин, И. А. Шуйкова, П. В. Сараев, И. В. Черпаков. –
 Липецк : ЛЭГИ, 2002. – 111 с.
-
-os — Miscellaneous operating system interfaces : [документация Python].
-– URL: https://docs.python.org/3/library/os.html (дата обращения: 28.09.2026).
 """
 
-import os
-
 from src.inference import run_inference
+from src.formatter import format_result
 
 
-def main(data_dir="data"):
-    if not os.path.isdir(data_dir):
-        print("Папка с примерами не найдена:", data_dir)
+def main():
+    file_path = input("Введите путь до файла: ").strip()
+    result = run_inference(file_path)
+    if result is None:
+        print(f"Файл не найден: {file_path}")
         return
-    examples = sorted(os.listdir(data_dir))
-    if not examples:
-        print("Нет примеров в папке:", data_dir)
-        return
-    for example in examples:
-        file_path = os.path.join(data_dir, example)
-        if not os.path.isfile(file_path):
-            continue
-        print("".join(run_inference(file_path)))
-        print("=" * 100 + "\n")
+    print(format_result(result, file_path))
 
 
 if __name__ == "__main__":
-    main("data")
+    main()
