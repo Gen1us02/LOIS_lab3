@@ -30,6 +30,9 @@ class KnowledgeBase:
         tail = dict(tail)
 
         for name, t in self.facts.items():
+            if self._base_name(name) != base_name:
+                continue
+
             if t.keys() == tail.keys() and all(abs(t[k] - tail[k]) < EPS for k in tail):
                 return name, "duplicate"
 
