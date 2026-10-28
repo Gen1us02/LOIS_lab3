@@ -18,8 +18,8 @@
 Липецк : ЛЭГИ, 2002. – 111 с.
 """
 
-from src.inference import run_inference
 from src.formatter import format_result
+from src.inference import run_inference
 
 
 def main():
