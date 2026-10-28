@@ -46,8 +46,8 @@ class KnowledgeBase:
 
     def _base_name(self, name):
         base = name.rstrip("'")
-        head, sep, tail = base.rpartition("_")
-        if sep and tail.isdigit():
+        head, tail = base[0], base[1:]
+        if tail.isdigit():
             return head
         return base
 

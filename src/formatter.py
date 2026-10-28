@@ -17,7 +17,7 @@
 
 def format_fuzzy_set(tail):
     if not tail:
-        return "∅"
+        return "{}"
     return "{" + ", ".join(f"<{k}, {v:.4g}>" for k, v in tail.items()) + "}"
 
 
@@ -37,7 +37,7 @@ def format_table(title, table):
 
 def _status_tag(name, status):
     return {
-        "new": f"новый → {name}",
+        "new": f"новый -> {name}",
         "duplicate": f"дубликат {name}",
         "covered": f"поглощён {name}",
     }[status]
