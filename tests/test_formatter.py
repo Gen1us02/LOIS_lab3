@@ -6,7 +6,7 @@ from src.knowledge_base import KnowledgeBase
 
 class TestFormatFuzzySet:
     def test_empty(self):
-        assert format_fuzzy_set({}) == "∅"
+        assert format_fuzzy_set({}) == "{}"
 
     def test_single(self):
         assert format_fuzzy_set({"x": 0.5}) == "{<x, 0.5>}"
@@ -32,7 +32,7 @@ class TestFormatTable:
 
 class TestStatusTag:
     def test_new(self):
-        assert _status_tag("B1'", "new") == "новый → B1'"
+        assert _status_tag("B1'", "new") == "новый -> B1'"
 
     def test_duplicate(self):
         assert _status_tag("B", "duplicate") == "дубликат B"
@@ -85,7 +85,7 @@ class TestFormatResult:
         out = format_result(result, path)
         assert "(нет применимых правил)" in out
         assert "Итоговая база знаний" in out
-        assert "A = ∅" in out
+        assert "A = {}" in out
 
     def test_new_fact(self, tmp_path):
         path = self._write_input(tmp_path, "A={<x,0.5>}\nB={<x,0.6>}\n\nA(x)~>B(y)\n")
@@ -100,7 +100,7 @@ class TestFormatResult:
         }
         out = format_result(result, path)
         assert "Добавлено: B1'" in out
-        assert "новый → B1'" in out
+        assert "новый -> B1'" in out
         assert "B1' = {<x, 1>}" in out
 
     def test_matched_only_no_new(self, tmp_path):

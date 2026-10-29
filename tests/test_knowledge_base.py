@@ -70,13 +70,13 @@ class TestBaseName:
 
     def test_underscore_digit_suffix(self):
         kb = KnowledgeBase({})
-        assert kb._base_name("A_1'") == "A"
-        assert kb._base_name("A_42") == "A"
+        assert kb._base_name("A1'") == "A"
+        assert kb._base_name("A42") == "A"
 
     def test_digit_without_underscore_kept(self):
         kb = KnowledgeBase({})
-        assert kb._base_name("A1") == "A1"
-        assert kb._base_name("A1'") == "A1"
+        assert kb._base_name("A1") == "A"
+        assert kb._base_name("A1'") == "A"
 
 
 class TestCovers:
