@@ -22,7 +22,7 @@ def format_fuzzy_set(tail):
 
 
 def format_table(title, table):
-    """Табличка {row: {col: value}} с табуляцией, как в исходной версии."""
+    """Табличка {row: {col: value}} с табуляцией."""
     output = [f"\n=== {title} ==="]
     if not table:
         output.append("(пустая таблица)")
